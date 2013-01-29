@@ -8,15 +8,20 @@ module Mongoleaf::Poster
     klass.extend self::ClassMethods
   end
 
+  module ClassConstants
+    Version = 1
+    Endpoint = "https://api.mongolab.com/api/#{Version}/databases/"
+  end
+
   module ClassMethods
    
     def key
-      @key ||= "?apiKey=#{
-        File.open("./config/api-key","r") {|l| key = l.readline; key.chomp!}}"
+      @key ||= 
+        "?apiKey=#{File.open("./config/api-key","r") {|l| key = l.readline; key.chomp!}}"
     end
 
     def databases
-      # https://api.mongolab.com/api/1/databases/
+      @url = URI.parse "#{Constants::Endpoint}/api/1/databases/#{key}"
     end
 
     def collection
@@ -27,6 +32,10 @@ module Mongoleaf::Poster
       # https://api.mongolab.com/api/1/databases/bookmarks/collections/library/<id>/
     end
 
+    def library_master
+      # https://api.mongolab.com/api/1/databases/bookmarks/collections/library/<id>/
+      @url = URI.parsee "#{Constants::Endpoint}/api/1/databases/bookmarks/collections/library/master/#{key}"
+    end
 
 =begin
 
@@ -68,6 +77,22 @@ https://support.mongolab.com/entries/20433053-rest-api-for-mongodb
        (by default, only one is updated)
     u: insert if none match the query (upsert)
 =end
+
+    def fire
+      net = Net::HTTP.new(@url.host, @url.port)
+      net.use_ssl = false
+      query = Net::HTTP::Get.new(@url.path + '?' + @url.query)
+      response = net.request(query)
+      case response
+        when Net::HTTPBadResponse
+          puts "Net::HTTPBadResponse ??"
+        when Net::HTTPRedirection
+          # TODO: manage wikiredirect
+        else
+          # puts "Response code: #{response.code} message: #{response.message} body: #{response.body}"
+          response.tap{|r| p "#{r.class}"}.body.force_encoding('UTF-8').to_json
+      end
+    end
 
 
     def connect_and_send(hash, key = "")
