@@ -6,7 +6,7 @@ module Mongoleaf::Poster
   
   def self.included(klass)
     p "#{Time.now} #{self} included"
-    klass.extend self::ClassMethods
+    klass.extend self::API
   end
 
   module Constants
@@ -19,7 +19,7 @@ module Mongoleaf::Poster
     "test #{self}"
   end
 
-  module ClassMethods
+  module API
     
     def key
       @key ||= 
