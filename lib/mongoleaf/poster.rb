@@ -13,6 +13,7 @@ module Mongoleaf::Poster
     Version = 1
     Endpoint = "https://api.mongolab.com/api/#{Version}/databases/"
     OnlineAPI = "https://support.mongolab.com/entries/20433053-rest-api-for-mongodb"
+    ConfigPath = "./config/api-key"
   end
 
   def test
@@ -20,16 +21,28 @@ module Mongoleaf::Poster
   end
 
   module API
-    
-    def key
-      @key ||= 
-        "?apiKey=#{File.open("./config/api-key","r") {|l| key = l.readline; key.chomp!}}"
+
+    include Constants
+
+    def self.included klass
+      key
     end
+
+    def key k = nil
+      if k
+        @key = k
+      else
+        @key ||= 
+        "?apiKey=#{File.open(ConfigPath,"r") {|l| key = l.readline; key.chomp!}}"
+      end
+    end
+
+    private :key
 
     def databases
       # /databases
       # GET - lists databases linked to the authenticated account
-      @url = URI.parse "#{Constants::Endpoint}#{key}"
+      @url = URI.parse "#{Endpoint}#{key}"
     end
 
     def databases_subservices database
@@ -40,14 +53,14 @@ module Mongoleaf::Poster
     def collections database
       # /databases/<d>/collections
       # GET - lists collections in database <d>
-      @url = URI.parse "#{Constants::Endpoint}#{database}/collections/#{key}"
+      @url = URI.parse "#{Endpoint}#{database}/collections/#{key}"
     end
    
     def collection database, collection
       # /databases/<d>/collections/<c>
       # GET - lists objects in collection <c>
       # POST - inserts a new object into collection <c>
-      @url = URI.parse "#{Constants::Endpoint}#{database}/collections/#{collection}#{key}"
+      @url = URI.parse "#{Endpoint}#{database}/collections/#{collection}#{key}"
     end
 
     def id(database, collection, id, hash={})
@@ -55,14 +68,15 @@ module Mongoleaf::Poster
       # GET - returns object with _id <id>
       # PUT - modifies object (or creates if new)
       # DELETE - deletes object with _id <id>
-      @url = URI.parse "#{Constants::Endpoint}#{database}/collections/#{collection}/id/#{key}"
+      @url = URI.parse "#{Endpoint}#{database}/collections/#{collection}/id/#{key}"
     end
 
     def library_master
-      @url = URI.parse "#{Constants::Endpoint}/bookmarks/collections/library/master/#{key}"
+      # /databases/<d>/collections/<c>/<id>
+      @url = URI.parse "#{Endpoint}/bookmarks/collections/library/master/#{key}"
     end
     
-    def select db="bookmarks", coll="library", q={'id'=>'master'}
+    def select db="bookmarks", coll="library", q={'id'=>'master'}, *fields
       # /databases/<db>/collections/<coll>?[q=<query>][&c=true] [&f=<fields>][&fo=true][&s=<order>] [&sk=<skip>][&l=<limit>]
       # GET - lists all objects matching these optional params:
       # q: JSON queryreference
@@ -77,6 +91,13 @@ module Mongoleaf::Poster
       #    i.e. { <field> : <order> }
       # sk: number of results to skip in the result set
       # l: limit for the number of results
+      f = {}
+      if fields
+        fields.each {|k| f[k] = 1}
+      else
+        f['id'] = 1
+      end
+      @url = URI.parse "#{Endpoint}#{db}/collections/#{coll}/#{key}&q=#{q}"
     end
 
     def insert db="bookmarks", coll="library", q={'id'=>'master'} 
