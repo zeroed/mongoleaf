@@ -13,6 +13,8 @@ Gem::Specification.new do |gem|
   gem.homepage      = "https://github.com/zeroed/mongoleaf"
 
   gem.add_dependency "rspec"
+  gem.add_dependency "mongo"
+  gem.add_dependency "mongoid"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }

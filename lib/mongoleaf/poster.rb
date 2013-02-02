@@ -61,7 +61,7 @@ module Mongoleaf::Poster
       @url = URI.parse "#{Endpoint}#{database}/collections/#{collection}#{key}"
     end
 
-    def id(database, collection, id, hash={})
+    def id database, collection, id, hash={} 
       # /databases/<d>/collections/<c>/<id>
       # GET - returns object with _id <id>
       # PUT - modifies object (or creates if new)
@@ -74,8 +74,9 @@ module Mongoleaf::Poster
       @url = URI.parse "#{Endpoint}/bookmarks/collections/library/master/#{key}"
     end
     
-    def select db="bookmarks", coll="library", q={'id'=>'master'}, *fields
-      # /databases/<db>/collections/<coll>?[q=<query>][&c=true] [&f=<fields>][&fo=true][&s=<order>] [&sk=<skip>][&l=<limit>]
+    def select db="bookmarks", coll="library", q={'_id'=>'master'}, *fields
+      # /databases/<db>/collections/<coll>
+      # ?[q=<query>][&c=true] [&f=<fields>][&fo=true][&s=<order>] [&sk=<skip>][&l=<limit>]
       # GET - lists all objects matching these optional params:
       # q: JSON queryreference
       # c: returns the result count for this query
@@ -90,15 +91,15 @@ module Mongoleaf::Poster
       # sk: number of results to skip in the result set
       # l: limit for the number of results
       f = {}
-      if fields
+      unless fields.empty?
         fields.each {|k| f[k] = 1}
       else
-        f['id'] = 1
+        f['_id'] = 1
       end
-      @url = URI.parse "#{Endpoint}#{db}/collections/#{coll}/#{key}&q=#{q.to_json}&f=#{f.to_json}"
+      @url = URI.parse(URI.encode "#{Endpoint}#{db}/collections/#{coll}/#{key}&q=#{q.to_json}&f=#{f.to_json}")
     end
 
-    def insert db="bookmarks", coll="library", q={'id'=>'master'} 
+    def insert q={}, db="bookmarks", coll="library"
       # /databases/<d>/collections/<c>?[q=<query>][&m=true] [&u=true]
       # PUT - updates one or all objects matching the query.
       #   payload should contain modifier operations
@@ -106,24 +107,30 @@ module Mongoleaf::Poster
       # m: apply update to all objects in result set
       #  (by default, only one is updated)
       # u: insert if none match the query (upsert)
+      @item = q.to_json
+      @url = URI.parse(URI.encode "#{Endpoint}#{db}/collections/#{coll}/#{key}")
     end
 
     def get
-      net = Net::HTTP.new(@url.host, @url.port)
-      net.use_ssl = true
       query = Net::HTTP::Get.new(@url.path + '?' + @url.query)
       get_response net.request(query)
     end
 
-    def post hash
+    def post hash = nil
       request = Net::HTTP::Post.new(@url.path + '?' + @url.query)
       request.content_type = 'application/json'
-      request.body = hash.to_json
+      request.body = hash.to_json if hash
       net.start {|http| http.request(request)}.tap do |r|
           puts "#{r.class}:#{r.code}:#{r.message}"
       end
       rescue SocketError
         puts "SocketError rescued"
+    end
+
+    def net
+      net = Net::HTTP.new(@url.host, @url.port)
+      net.use_ssl = true
+      @net = net
     end
 
     def get_response response
