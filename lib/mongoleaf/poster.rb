@@ -13,8 +13,8 @@ module Mongoleaf::Poster
     Version = 1
     Endpoint = "https://api.mongolab.com/api/#{Version}/databases/"
     OnlineAPI = "https://support.mongolab.com/entries/20433053-rest-api-for-mongodb"
-    ConfigPath = "./config/api-key"
-    NoteUrl = "#{Endpoint}bookmarks/collections/notes?apiKey=#{key}"
+    KeyPath = "./config/api-key"
+    NoteUrl = "#{Endpoint}bookmarks/collections/notes/"
   end
 
   module API
@@ -30,7 +30,7 @@ module Mongoleaf::Poster
         @key = k
       else
         @key ||= 
-        "?apiKey=#{File.open(ConfigPath,"r") {|l| key = l.readline; key.chomp!}}"
+        "?apiKey=#{File.open(KeyPath,"r") {|l| key = l.readline; key.chomp!}}"
       end
     end
 
@@ -45,6 +45,7 @@ module Mongoleaf::Poster
     def databases_subservices database
       # /databases/<d>
       # GET - lists sub-services for database <d>
+      @url = URI.parse "#{Endpoint}#{database}/#{key}"
     end
 
     def collections database
@@ -65,7 +66,7 @@ module Mongoleaf::Poster
       # GET - returns object with _id <id>
       # PUT - modifies object (or creates if new)
       # DELETE - deletes object with _id <id>
-      @url = URI.parse "#{Endpoint}#{database}/collections/#{collection}/id/#{key}"
+      @url = URI.parse "#{Endpoint}#{database}/collections/#{collection}/id/#{id}#{key}"
     end
 
     def library_master
@@ -94,7 +95,7 @@ module Mongoleaf::Poster
       else
         f['id'] = 1
       end
-      @url = URI.parse "#{Endpoint}#{db}/collections/#{coll}/#{key}&q=#{q}"
+      @url = URI.parse "#{Endpoint}#{db}/collections/#{coll}/#{key}&q=#{q.to_json}&f=#{f.to_json}"
     end
 
     def insert db="bookmarks", coll="library", q={'id'=>'master'} 
@@ -111,34 +112,31 @@ module Mongoleaf::Poster
       net = Net::HTTP.new(@url.host, @url.port)
       net.use_ssl = true
       query = Net::HTTP::Get.new(@url.path + '?' + @url.query)
-      response = net.request(query)
-      case response
-        when Net::HTTPBadResponse
-          puts "Net::HTTPBadResponse"
-        when Net::HTTPRedirection
-          # TODO: manage redirect
-        else
-          # puts "Response code: #{response.code} message: #{response.message} body: #{response.body}"
-          @bookmarks = JSON.parse(response.tap{|r| p "#{r.class}"}.body.force_encoding('UTF-8'))#.to_json
-      end
+      get_response net.request(query)
     end
 
     def post hash
       request = Net::HTTP::Post.new(@url.path + '?' + @url.query)
       request.content_type = 'application/json'
       request.body = hash.to_json
-      response = net.start {|http| http.request(request)}
-      case response
-        when Net::HTTPBadResponse
-          puts "Net::dResponse ??"
-        else
-          puts "Response code: #{response.code} message: #{response.message} body: #{response.body}"
+      net.start {|http| http.request(request)}.tap do |r|
+          puts "#{r.class}:#{r.code}:#{r.message}"
       end
       rescue SocketError
         puts "SocketError rescued"
     end
 
-    def get_response 
+    def get_response response
+      case response
+        when Net::HTTPBadResponse
+          puts "Net::HTTPBadResponse"
+        when Net::HTTPRedirection
+          # TODO: manage redirect
+        else
+          @bookmarks = JSON.parse(response.tap { |r| 
+            puts "#{r.class}:#{r.code}:#{r.message}"
+            }.body.force_encoding('UTF-8'))
+      end
     end
 
     def dump
@@ -155,18 +153,14 @@ module Mongoleaf::Poster
       hash = {:title => title, :note => note}
       hash[:url] = url if url
       hash[:timestamp] = Time.now
-      uri = URI.parse NoteUrl
+      uri = URI.parse "#{NoteUrl}#{key}"
       net = Net::HTTP.new(uri.host, uri.port)
       net.use_ssl = true
       request = Net::HTTP::Post.new("#{uri.path}?#{uri.query}")
       request.content_type = 'application/json'
       request.body = hash.to_json
-      response = net.start {|http| http.request(request)}
-      case response
-        when Net::HTTPBadResponse
-          puts "Net::dResponse ??"
-        else
-          puts "Response code: #{response.code} message: #{response.message} body: #{response.body}"
+      net.start {|http| http.request(request)}.tap do |r|
+          puts "#{r.class}:#{r.code}:#{r.message}"
       end
       rescue SocketError
         puts "SocketError rescued"
