@@ -14,10 +14,7 @@ module Mongoleaf::Poster
     Endpoint = "https://api.mongolab.com/api/#{Version}/databases/"
     OnlineAPI = "https://support.mongolab.com/entries/20433053-rest-api-for-mongodb"
     ConfigPath = "./config/api-key"
-  end
-
-  def test
-    "test #{self}"
+    NoteUrl = "#{Endpoint}bookmarks/collections/notes?apiKey=#{key}"
   end
 
   module API
@@ -145,15 +142,20 @@ module Mongoleaf::Poster
     end
 
     def dump
-      filename = "reading_marks_#{Time.now.strftime("%Y%m%dT%H%M")}"
-      io = File.open("#{filename}.json","w")
-      JSON.dump(@bookmarks, io)
+      if @bookmarks
+        filename = "reading_marks_#{Time.now.strftime("%Y%m%dT%H%M")}"
+        io = File.open("#{filename}.json","w")
+        JSON.dump(@bookmarks, io)
+      else
+        raise '@bookmarksEmpty'
+      end
     end
 
-    def post_note(hash, key)
-        File.open("./config/api-key","r").each_line {|l| key = l; key.chomp!} unless key
-      path = "https://api.mongolab.com/api/1/databases/bookmarks/collections/notes?apiKey=#{key}"
-      uri = URI.parse(path)
+    def post_note title, note, url = nil
+      hash = {:title => title, :note => note}
+      hash[:url] = url if url
+      hash[:timestamp] = Time.now
+      uri = URI.parse NoteUrl
       net = Net::HTTP.new(uri.host, uri.port)
       net.use_ssl = true
       request = Net::HTTP::Post.new("#{uri.path}?#{uri.query}")
