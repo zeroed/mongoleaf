@@ -26,6 +26,18 @@ include Mongoleaf
 Mongoleaf.insert({:title => 'foo', :content => 'foobar'}, 'db', 'notes')
 ```
 
+```ruby
+require 'mongoleaf'
+include Mongoleaf
+Mongoleaf.insert_to_mongo({:title => 'yup', :content => 'yup note from irb'})
+```
+
+```
+"2013-02-03 14:19:40 +0100 Mongoleaf::Poster included"
+"2013-02-03 14:19:40 +0100 Mongoleaf::Util included"
+{"_id"=>BSON::ObjectId('510e63ecd508fe1fde000001'), "title"=>"yup", "content"=>"yup note from irb", "timestamp"=>2013-02-03 13:19:40 UTC}
+```
+
 ...
 
 ```ruby
