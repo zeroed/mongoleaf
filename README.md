@@ -20,6 +20,33 @@ Or install it yourself as:
 
 TODO: Write usage instructions here
 
+```ruby
+require 'mongoleaf'
+include Mongoleaf
+Mongoleaf.insert({:title => 'foo', :content => 'foobar'}, 'db', 'notes')
+```
+
+...
+
+```ruby
+def key k = nil
+private :key
+def databases
+def databases_subservices database
+def collections database
+def collection database, collection
+def id database, collection, id, hash={} 
+def library_master
+def select db="bookmarks", coll="library", q={'_id'=>'master'}, *fields
+def insert q={}, db="bookmarks", coll="library"
+def get
+def post hash = nil
+def net
+def get_response response
+def dump
+def post_note title, note, url = nil
+```
+
 ## Contributing
 
 1. Fork it
