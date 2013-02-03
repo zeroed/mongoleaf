@@ -1,4 +1,5 @@
-*.gem
+# pushing the gem *.gem
+# *.gem
 *.rbc
 .bundle
 .config
@@ -9,7 +10,8 @@ _yardoc
 coverage
 doc/
 lib/bundler/man
-pkg
+# pushing the pkg
+# pkg
 rdoc
 spec/reports
 test/tmp
