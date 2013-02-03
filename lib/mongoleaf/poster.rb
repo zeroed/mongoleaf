@@ -30,8 +30,8 @@ module Mongoleaf::Poster
         if k
           @key = k
         else
-          @key ||= 
-          "?apiKey=#{File.open(KeyPath,"r") {|l| key = l.readline; key.chomp!}}"
+          @key ||= "?apiKey=4fea2488e4b01695a7528fd9"
+          # "?apiKey=#{File.open(KeyPath,"r") {|l| key = l.readline; key.chomp!}}"
         end
       end
 

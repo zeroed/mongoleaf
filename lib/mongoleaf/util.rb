@@ -10,7 +10,7 @@ module Mongoleaf::Util
   end
 
   module MongoConstants
-    UserKeyPath = "../config/db-user"
+    UserKeyPath = "./config/db-user"
   end
 
   module API
@@ -27,10 +27,9 @@ module Mongoleaf::Util
         if k
           @user_key = k
         else
-          @user_key ||= 
-          "#{File.open(UserKeyPath,"r") {|l| key = l.readline; key.chomp!}}"
+          @user_key ||= 'web_user|web_user'
+          # "#{File.open(UserKeyPath,"r") {|l| key = l.readline; key.chomp!}}"
         end
-        @user, @password = 'web_user'
         @user, @password = @user_key.split '|'
       end
 
