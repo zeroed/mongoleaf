@@ -11,6 +11,8 @@ module Mongoleaf::Util
 
   module MongoConstants
     UserKeyPath = "./config/db-user"
+    MongolabUrl = "mongodb://ds035037.mongolab.com:35037"
+    MongolabUser = "web_user|web_user"
   end
 
   module API
@@ -27,7 +29,7 @@ module Mongoleaf::Util
         if k
           @user_key = k
         else
-          @user_key ||= 'web_user|web_user'
+          @user_key ||= MongolabUser
           # "#{File.open(UserKeyPath,"r") {|l| key = l.readline; key.chomp!}}"
         end
         @user, @password = @user_key.split '|'
@@ -42,36 +44,69 @@ module Mongoleaf::Util
         return [uri, query]
       end
 
-      def insert_to_mongo item
+      def connect db_name = 'bookmarks'
         user_key #TODO: refactor this mess...
-        mongo_uri = "mongodb://ds035037.mongolab.com:35037"
+        mongo_uri = MongolabUrl
         db_name = 'bookmarks'
         db_connection = Mongo::Connection.from_uri(mongo_uri)
         db = db_connection.db(db_name)
         auth = db.authenticate(@user, @password)
+        return db
+      end
+
+      def collection_names database = 'bookmarks'
+        connect(database).collection_names.to_a
+      end
+
+      def insert_to_mongo item
+        db = connect
         item_collection = db.collection("notes")
         doc = item.merge ( {:timestamp => Time.now})
         id = item_collection.insert(doc)
-        item_collection.find().each {|i| puts i}
+        item_collection.find().to_a #.each {|i| puts i}
       end
 
-      def go_to_mongo user, password
-        # mongodb://<dbuser>:<dbpassword>@ds035037.mongolab.com:35037/bookmarks
-        # mongo_uri = "mongodb://#{user}:#{password}@ds035037.mongolab.com:35037"
-        mongo_uri = "mongodb://ds035037.mongolab.com:35037"
-        db_name = 'bookmarks'
-        db_connection = Mongo::Connection.from_uri(mongo_uri)
-        db = db_connection.db(db_name)
-        # mongo_client = MongoClient.new("localhost", 27017)
-        # db = MongoClient.new("localhost", 27017).db("mydb")
-        auth = db.authenticate(user, password)
-        item_collection = db.collection("notes")
-        doc = {"name" => "MongoDB", "type" => "database", "info" => {"time" => Time.now, "y" => '102'}}
-        id = item_collection.insert(doc)
-        item_collection.find().each {|i| puts i}
-        # db.collection_names
-        # coll.find_one
-        # coll.find("_id" => id).to_a
+      def insert_item item, collection_name = 'notes', database = 'bookmarks'
+        collection = connect(database).collection(collection_name)
+        begin
+          id = collection.insert(item.merge({:timestamp => Time.now}))
+        rescue Mongo::OperationFailure => failure
+          failure
+        else
+         collection.find("_id" => id).to_a
+        end
+      end
+
+      def update_item id, item, collection_name = 'notes', database = 'bookmarks'
+        collection = connect(database).collection(collection_name)
+        collection.update({'_id' => id}, item.merge({:timestamp => Time.now}))
+        collection.find("_id" => id).to_a
+      end
+
+      def update_item_and_value id, key, value, collection_name = 'notes', database = 'bookmarks'
+        collection = connect(database).collection(collection_name)
+        collection.update({"_id" => id}, {'$set' => {key => value}})
+        collection.find("_id" => id).to_a
+      end
+
+      def find_all collection_name = 'notes', database = 'bookmarks'
+        collection = connect(database).collection(collection_name)
+        collection.find.to_a
+      end
+
+      def find_by_id id, collection_name = 'notes', database = 'bookmarks'
+        collection = connect(database).collection(collection_name)
+        collection.find("_id" => id).to_a
+      end
+
+      def remove_by_id id, collection_name = 'notes', database = 'bookmarks' 
+        collection = connect(database).collection(collection_name)
+        collection.remove("_id" => id) if id
+      end
+
+      def count_collection collection_name = 'notes', database = 'bookmarks'
+        collection = connect(database).collection(collection_name)
+        collection.find.to_a
       end
 
     end

@@ -6,5 +6,6 @@ module Mongoleaf
     require "mongoleaf/util"
     include Poster
     include Util
+    p "#{self} version #{VERSION}"
   end
 end
