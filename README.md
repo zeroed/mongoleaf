@@ -61,6 +61,7 @@ def post_note title, note, url = nil
 
 ## API
 
+```ruby
     def connect db_name = 'bookmarks'
     def collection_names database = 'bookmarks'
     def insert_to_mongo item
@@ -71,6 +72,7 @@ def post_note title, note, url = nil
     def find_by_id id, collection_name = 'notes', database = 'bookmarks'
     def remove_by_id id, collection_name = 'notes', database = 'bookmarks' 
     def count_collection collection_name = 'notes', database = 'bookmarks'
+```
 
 ## Contributing
 
