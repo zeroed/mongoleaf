@@ -18,12 +18,13 @@ Gem::Specification.new do |gem|
   gem.add_dependency "mongoid"
 
   gem.files         = `git ls-files`.split($/)
-  gem.files        += [ "config/api-key", "config/db-user"]
-  gem.files        += Dir.glob('config/**/*')
-  gem.files        += Dir['config/*']
+#  gem.files        += [ "config/api-key", "config/db-user"]
+#  gem.files        += Dir.glob('config/**/*')
+#  gem.files        += Dir['config/*']
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
-  gem.require_paths = ["lib", "config"]
+#  gem.require_paths = ["lib", "config"]
+  gem.require_paths = ["lib"]
   
   gem.requirements << 'the foo...'
 

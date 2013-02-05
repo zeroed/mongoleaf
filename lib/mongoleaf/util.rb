@@ -10,9 +10,8 @@ module Mongoleaf::Util
   end
 
   module MongoConstants
-    UserKeyPath = "./config/db-user"
+    UserKeyPath = "config/db-user"
     MongolabUrl = "mongodb://ds035037.mongolab.com:35037"
-    MongolabUser = "web_user|web_user"
   end
 
   module API
@@ -29,8 +28,8 @@ module Mongoleaf::Util
         if k
           @user_key = k
         else
-          @user_key ||= MongolabUser
-          # "#{File.open(UserKeyPath,"r") {|l| key = l.readline; key.chomp!}}"
+          @user_key ||= 
+          "#{File.open(File.join(File.dirname(__FILE__), UserKeyPath ),"r") {|l| key = l.readline; key.chomp!}}"
         end
         @user, @password = @user_key.split '|'
       end
@@ -45,7 +44,7 @@ module Mongoleaf::Util
       end
 
       def connect db_name = 'bookmarks'
-        user_key #TODO: refactor this mess...
+        user_key 
         mongo_uri = MongolabUrl
         db_name = 'bookmarks'
         db_connection = Mongo::Connection.from_uri(mongo_uri)

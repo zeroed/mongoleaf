@@ -13,7 +13,7 @@ module Mongoleaf::Poster
     Version = 1
     Endpoint = "https://api.mongolab.com/api/#{Version}/databases/"
     OnlineAPI = "https://support.mongolab.com/entries/20433053-rest-api-for-mongodb"
-    KeyPath = "./config/api-key"
+    ApiKeyPath = "config/api-key"
     NoteUrl = "#{Endpoint}bookmarks/collections/notes/"
   end
 
@@ -30,8 +30,8 @@ module Mongoleaf::Poster
         if k
           @key = k
         else
-          @key ||= "?apiKey=4fea2488e4b01695a7528fd9"
-          # "?apiKey=#{File.open(KeyPath,"r") {|l| key = l.readline; key.chomp!}}"
+          @key ||= 
+          "?apiKey=#{File.open(File.join(File.dirname(__FILE__), ApiKeyPath ),"r") {|l| key = l.readline; key.chomp!}}"
         end
       end
 
